@@ -1,0 +1,226 @@
+# ctfChad4
+
+# This version is now optimized for OpenAI’s schema requirements and should be ready for upload as a custom tool! Let me know if you need further adjustments.
+
+ChatGPT said:
+
+To expand the capabilities of this API and address the additional requirements, I'll add parameters to support more complex cipher analysis, differentiate between encryption algorithms and hash types, and introduce support for common wordlists. I’ll also enhance it with functionality for various encoding schemes (e.g., ROT, Base encodings), international characters, and symbol/hieroglyphic translations.
+
+Here’s the updated OpenAPI specification:
+
+yaml
+Copy code
+openapi: 3.1.0
+info:
+  title: Advanced NCL Cyber Tool API
+  version: 1.0.3
+servers:
+  - url: https://api.nclcybertools.com
+
+paths:
+  /detectBase:
+    post:
+      operationId: detectBase
+      summary: Detects the base or encoding of a given input, including binary, hexadecimal, and common encodings.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: string
+                  description: The string to analyze for base or encoding.
+                detectType:
+                  type: string
+                  enum: [numberBase, baseEncoding, languageScript, cipherPattern]
+                  description: Type of detection (e.g., number base, encoding, script, cipher pattern).
+      responses:
+        '200':
+          description: Detected base, encoding, or script information.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    description: Detected base, encoding, or script.
+                  confidence:
+                    type: number
+                    format: float
+                    description: Confidence level of detection.
+        '400':
+          description: Invalid input format
+
+  /analyzeCipher:
+    post:
+      operationId: analyzeCipher
+      summary: Analyzes a cipher text to suggest potential cipher algorithms or patterns.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ciphertext:
+                  type: string
+                  description: The cipher text to analyze.
+                hints:
+                  type: array
+                  items:
+                    type: string
+                  description: List of known hints (e.g., language, ROT, RSA, international scripts).
+                language:
+                  type: string
+                  description: Language code of the text, if known (e.g., en, es, zh).
+      responses:
+        '200':
+          description: Suggested ciphers or patterns based on analysis.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestedCiphers:
+                    type: array
+                    items:
+                      type: string
+                    description: List of potential cipher algorithms (e.g., Caesar, RSA, ROT13).
+                  confidence:
+                    type: number
+                    format: float
+                    description: Confidence level of analysis.
+        '400':
+          description: Invalid input format
+
+  /crackPassword:
+    post:
+      operationId: crackPassword
+      summary: Attempts to crack a hashed password using specified hash type and optional wordlists.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hash:
+                  type: string
+                  description: The hashed password to crack.
+                hashType:
+                  type: string
+                  enum: [MD5, SHA-1, SHA-256, NTLM, bcrypt]
+                  description: Type of hash (e.g., MD5, SHA-256).
+                wordlist:
+                  type: string
+                  enum: [rockyou, windows, custom]
+                  description: Wordlist to use (rockyou, windows, or custom list).
+                customWordlist:
+                  type: array
+                  items:
+                    type: string
+                  description: Custom wordlist array, if selected.
+      responses:
+        '200':
+          description: Result of password cracking attempt.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  password:
+                    type: string
+                    description: The cracked password, if successful.
+                  success:
+                    type: boolean
+                    description: Indicates if cracking was successful.
+        '400':
+          description: Invalid hash format or unsupported hash type
+
+  /decryptMessage:
+    post:
+      operationId: decryptMessage
+      summary: Decrypts an encrypted message using a specified algorithm and key, supporting various international character sets.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ciphertext:
+                  type: string
+                  description: The encrypted message.
+                algorithm:
+                  type: string
+                  enum: [AES, DES, RSA, ROT13, Caesar]
+                  description: Encryption algorithm used.
+                key:
+                  type: string
+                  description: The decryption key.
+                encoding:
+                  type: string
+                  enum: [UTF-8, ASCII, ISO-8859-1, UTF-16]
+                  description: Character encoding for decryption.
+      responses:
+        '200':
+          description: Successfully decrypted message.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plaintext:
+                    type: string
+                    description: The decrypted message.
+        '400':
+          description: Invalid input or unsupported algorithm
+        '401':
+          description: Decryption failed due to incorrect key or algorithm
+
+  /translateSymbols:
+    post:
+      operationId: translateSymbols
+      summary: Translates symbols, hieroglyphs, or encoded text into plaintext, supporting various languages and scripts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                symbols:
+                  type: string
+                  description: The symbols or encoded text to translate.
+                script:
+                  type: string
+                  enum: [morse, hieroglyphics, runes, alphanumeric]
+                  description: Type of script (e.g., morse, hieroglyphics, runes).
+                language:
+                  type: string
+                  description: Target language for translation (ISO 639-1 code, e.g., en, fr, zh).
+      responses:
+        '200':
+          description: Translation of symbols or script.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  translation:
+                    type: string
+                    description: Translated plaintext.
+        '400':
+          description: Invalid input or unsupported script
+
+# Explanation of New/Updated Parameters
+# detectType (in /detectBase): Specifies whether to detect a numeric base, encoding scheme, language script, or cipher pattern.
+# ciphertext with hints and language (in /analyzeCipher): Allows hints and language codes for better cipher pattern analysis.
+# wordlist and customWordlist (in /crackPassword): Supports common wordlists (RockYou, Windows) and custom wordlist arrays for password cracking.
+# encoding (in /decryptMessage): Allows selection of encoding for decryption, supporting UTF-8, ASCII, and international character sets.
+# translateSymbols endpoint: Added for symbol/hieroglyph translation with support for Morse, hieroglyphics, runes, and language-specific translation.
+
+## This spec now supports a broad range of capabilities, including cipher detection, character encoding options, wordlists, and symbol translations. Let me know if you need further adjustments or additional functionality!

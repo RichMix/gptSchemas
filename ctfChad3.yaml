@@ -1,0 +1,126 @@
+# Create spec to upload in your specs creating a GPT to help me with number base detection, password cracking, and decryption for NCL
+# To assist with number base detection, password cracking, and decryption in the NCL (National Cyber League) context, I'll create an OpenAPI 3.1.0 specification for a hypothetical API that handles these functionalities. This spec will cover endpoints for base detection, password cracking, and decryption.
+# Please ensure that any usage complies with competition rules, as automating certain tasks could be restricted. Here’s the OpenAPI spec:
+
+# ctfChadYaml
+
+openapi: 3.1.0
+info:
+  title: NCL Cyber Tool API
+  description: API to assist with number base detection, password cracking, and decryption for National Cyber League (NCL) challenges.
+  version: 1.0.1
+servers:
+  - url: https://api.nclcybertools.com
+    description: Main API server for NCL Cyber Tools
+
+paths:
+  /detectBase:
+    post:
+      operationId: detectBase
+      summary: Detects the base of a given number
+      description: Detects the base (e.g., binary, octal, hexadecimal) of an input string.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                number:
+                  type: string
+                  description: The number string to analyze for base detection.
+      responses:
+        '200':
+          description: Detected base and confidence level.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  base:
+                    type: string
+                    description: Detected base of the number (e.g., binary, decimal, hex).
+                  confidence:
+                    type: number
+                    format: float
+                    description: Confidence level of the detection.
+        '400':
+          description: Invalid input format
+
+  /crackPassword:
+    post:
+      operationId: crackPassword
+      summary: Attempts to crack a hashed password
+      description: Tries common password-cracking methods to retrieve the original password from a hashed value.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hash:
+                  type: string
+                  description: Hashed password to crack.
+                hashType:
+                  type: string
+                  description: Type of hash (e.g., MD5, SHA-256).
+      responses:
+        '200':
+          description: Successfully cracked password or failure message.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  password:
+                    type: string
+                    description: The cracked password, if successful.
+                  success:
+                    type: boolean
+                    description: Indicates if cracking was successful.
+        '400':
+          description: Invalid hash format or unsupported hash type
+
+  /decryptMessage:
+    post:
+      operationId: decryptMessage
+      summary: Decrypts a given encrypted message
+      description: Decrypts an encrypted message using a specified encryption algorithm and key.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ciphertext:
+                  type: string
+                  description: The encrypted message.
+                algorithm:
+                  type: string
+                  description: The encryption algorithm used (e.g., AES, DES).
+                key:
+                  type: string
+                  description: The decryption key.
+      responses:
+        '200':
+          description: Successfully decrypted message.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plaintext:
+                    type: string
+                    description: The decrypted message.
+        '400':
+          description: Invalid input or unsupported algorithm
+        '401':
+          description: Decryption failed due to incorrect key or algorithm
+This specification includes three main paths:
+
+# /detectBase for determining the base of a given number.
+# /crackPassword for attempting to crack a password hash using the specified hash type.
+# /decryptMessage for decrypting an encrypted message given an encryption key and algorithm.
+# Let me know if you'd like any modifications or additional details for these endpoints!
