@@ -1,0 +1,279 @@
+# Include Walk-Through
+# This challenge involves querying the server’s AWS Instance Metadata Service. The instance metadata service is implemented on all AWS EC2 (their virtual machine product offering) instances and is implemented as a basic HTTP server. To access the service and retrieve the metadata, make HTTP requests per the document endpoints listed in the instance metadata service documentation. The full list of endpoints is available via: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-categories.html
+
+# Intuition for Service Discovery
+# In order to find out that this is the AWS instance metadata service, you can navigate to the hostname and port number provided using simply your web browser just to see if it is a web server or not and you’ll see that it simply serves the plaintext of: 
+
+# This indicates to us that this is indeed a HTTP web server of some variety. The text returned from the server may indicate a potential path for you to follow in the URL scheme. So from here, if you append the returned text of latest to the URL and make another request, you’ll get a response with the following list:
+
+# yaml
+openapi: 3.1.0
+info:
+  title: Kali Linux Reconnaissance Tools API
+  version: 1.0.0
+servers:
+  - url: https://api.kalirecontools.com
+
+paths:
+  /awsMetadataService:
+    get:
+      operationId: getAwsMetadata
+      summary: Accesses AWS EC2 instance metadata service for basic metadata retrieval.
+      parameters:
+        - name: endpoint
+          in: query
+          required: false
+          description: AWS metadata endpoint path to query (e.g., `/latest/meta-data/ami-id`).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Metadata response from AWS instance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metadata:
+                    type: string
+                    description: Retrieved metadata information.
+        '400':
+          description: Invalid request to AWS metadata service
+        '404':
+          description: Metadata not found at the specified endpoint
+
+  /nmapScan:
+    post:
+      operationId: initiateNmapScan
+      summary: Initiates an Nmap scan for initial reconnaissance on a specified IP range.
+      description: Runs Nmap to identify open ports, protocols, and services on a target network, with options for adjusting verbosity.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ipRange:
+                  type: string
+                  description: CIDR range or IP to scan (e.g., `192.168.1.0/24`).
+                scanType:
+                  type: string
+                  enum: [ping, SYN, serviceDetection]
+                  description: Type of scan: ping scan, SYN scan, or service detection scan.
+                verbosity:
+                  type: integer
+                  default: 0
+                  description: Verbosity level for scan output (0 = quiet, 5 = very verbose).
+      responses:
+        '200':
+          description: Successfully initiated Nmap scan.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scanResults:
+                    type: string
+                    description: Summary of Nmap scan results.
+        '400':
+          description: Invalid input format for Nmap scan
+
+  /gitRepositoryCheck:
+    post:
+      operationId: checkGitRepo
+      summary: Checks for Git repositories and retrieves metadata or sensitive information if available.
+      description: Queries local or remote Git repositories for branches, tags, and sensitive information.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                repoURL:
+                  type: string
+                  description: URL of the Git repository to check.
+                fetchType:
+                  type: string
+                  enum: [branches, tags, sensitiveData]
+                  description: Specify to fetch branches, tags, or sensitive data like `.gitignore` entries.
+      responses:
+        '200':
+          description: Retrieved Git repository metadata.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  repositoryData:
+                    type: string
+                    description: Information on the specified repository.
+        '400':
+          description: Invalid Git repository URL or unsupported fetch type
+
+  /jsonParser:
+    post:
+      operationId: parseJson
+      summary: Parses JSON data to identify metadata and structure within the data.
+      description: Analyzes JSON data, highlighting fields, structure, and sensitive information.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jsonData:
+                  type: string
+                  description: JSON string to analyze.
+                keywords:
+                  type: array
+                  items:
+                    type: string
+                  description: Keywords to highlight in JSON analysis (e.g., "password", "token").
+      responses:
+        '200':
+          description: Parsed JSON data with identified metadata.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  parsedData:
+                    type: object
+                    description: Structured view of the JSON data with sensitive information highlighted.
+        '400':
+          description: Invalid JSON format
+
+  /wiresharkCapture:
+    post:
+      operationId: startWiresharkCapture
+      summary: Initiates a Wireshark capture on specified network interface.
+      description: Starts a packet capture on the given interface to analyze network traffic.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                interface:
+                  type: string
+                  description: Network interface to capture on (e.g., `eth0`).
+                filter:
+                  type: string
+                  description: Capture filter (e.g., `tcp port 80`).
+      responses:
+        '200':
+          description: Wireshark capture started.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  captureID:
+                    type: string
+                    description: Unique identifier for the capture session.
+        '400':
+          description: Invalid interface or filter specified
+
+  /burpsuiteRequest:
+    post:
+      operationId: sendBurpsuiteRequest
+      summary: Sends a request through BurpSuite to analyze a target URL.
+      description: Uses BurpSuite to send HTTP requests and retrieve responses for vulnerability analysis.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  description: Target URL to analyze.
+                method:
+                  type: string
+                  enum: [GET, POST]
+                  description: HTTP method to use.
+                headers:
+                  type: object
+                  description: Optional headers to include in the request.
+                data:
+                  type: object
+                  description: Optional data for POST requests.
+      responses:
+        '200':
+          description: Retrieved HTTP response from BurpSuite.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: object
+                    description: HTTP response details.
+        '400':
+          description: Invalid URL format or request parameters
+
+  /walkthrough/awsMetadataQuery:
+    get:
+      operationId: awsMetadataQueryWalkthrough
+      summary: Provides a walkthrough for querying the AWS metadata service.
+      description: Guides users on querying the AWS metadata service using HTTP requests.
+      responses:
+        '200':
+          description: Walkthrough instructions for AWS metadata querying.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  steps:
+                    type: array
+                    items:
+                      type: string
+                    description: Step-by-step instructions for querying AWS instance metadata.
+        '404':
+          description: Walkthrough not found
+
+  /walkthrough/serviceDiscovery:
+    get:
+      operationId: serviceDiscoveryWalkthrough
+      summary: Walkthrough on service discovery methods and best practices.
+      description: Provides guidance on detecting services with minimal noise.
+      responses:
+        '200':
+          description: Walkthrough instructions for service discovery.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  steps:
+                    type: array
+                    items:
+                      type: string
+                    description: Step-by-step instructions for quiet service discovery.
+        '404':
+          description: Walkthrough not found
+Endpoints Overview and Descriptions
+/awsMetadataService: Retrieves AWS EC2 metadata for reconnaissance of virtual machines, allowing specific endpoints to be queried.
+
+/nmapScan: Runs an Nmap scan on a specified IP range with options for quiet ping scans, SYN scans, or service detection. Verbosity can be adjusted to control the "noise" of the scan.
+
+/gitRepositoryCheck: Connects to a Git repository to list branches, tags, and potential sensitive data, such as .gitignore files or security misconfigurations.
+
+/jsonParser: Analyzes JSON data for metadata and highlights key information based on specified keywords (e.g., "password").
+
+/wiresharkCapture: Initiates a network packet capture on a specified interface, with optional filtering for targeted data analysis.
+
+/burpsuiteRequest: Sends an HTTP request through BurpSuite for vulnerability analysis of the target URL, supporting both GET and POST methods.
+
+/walkthrough/awsMetadataQuery: Provides a walkthrough for querying AWS metadata by making HTTP requests to specific endpoints.
+
+/walkthrough/serviceDiscovery: A guide for effective service discovery techniques that minimize detection and noise.
+
+
+# This setup provides extensive capabilities for reconnaissance and analysis, incorporating best practices for accessing metadata services, structured data parsing, and traffic analysis. Let me know if you need additional refinements or added tools!

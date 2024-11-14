@@ -1,0 +1,278 @@
+# scanning2
+
+# Retrieving Metadata
+# To make a request to retrieve the metadata, you can use either your browser as the HTTP client and type the URL into the browser’s address bar or you can use a command line HTTP client such as curl . 
+
+# The request URL should be structured as http://[hostname]:[port]/latest/meta-data/[endpoint] per the AWS guide on how to retrieve the instance metadata. In this case the hostname and port are provided to you in the challenge and the endpoint would be the “Category” column in the AWS instance metadata documentation page.  
+
+# To support this walkthrough with reconnaissance, metadata retrieval, and remote command interaction, I'll set up an API schema that covers:
+
+# AWS EC2 Metadata retrieval for instance details, security credentials, and instance type.
+# Service Discovery and Anomaly Analysis using tools like Nmap and netcat (nc) for understanding port behavior.
+# Remote Command Execution for querying a server with a command-based interface.
+# Walkthrough guidance to support step-by-step instructions, covering each action and its significance.
+
+
+# Here’s the expanded OpenAPI schema with these features:
+# yaml
+
+openapi: 3.1.0
+info:
+  title: Network Reconnaissance and AWS Metadata Retrieval API
+  version: 1.0.1
+servers:
+  - url: https://api.networkrecon.com
+
+paths:
+  /aws/metadata/availabilityZone:
+    get:
+      operationId: getAvailabilityZone
+      summary: Retrieves the AWS EC2 instance's availability zone.
+      description: Accesses the `/placement/availability-zone` endpoint in the AWS metadata service.
+      responses:
+        '200':
+          description: Successfully retrieved availability zone.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  availabilityZone:
+                    type: string
+                    description: AWS availability zone (e.g., `us-west-2a`).
+
+  /aws/metadata/securityCredentials:
+    get:
+      operationId: getSecurityCredentials
+      summary: Retrieves the IAM role name associated with the instance.
+      description: Accesses the `/iam/security-credentials` endpoint in the AWS metadata service.
+      responses:
+        '200':
+          description: Successfully retrieved IAM role information.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  iamRole:
+                    type: string
+                    description: IAM role name for the EC2 instance.
+
+  /aws/metadata/instanceType:
+    get:
+      operationId: getInstanceType
+      summary: Retrieves the AWS EC2 instance type.
+      description: Accesses the `/instance-type` endpoint in the AWS metadata service to identify the instance type.
+      responses:
+        '200':
+          description: Successfully retrieved instance type.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  instanceType:
+                    type: string
+                    description: AWS EC2 instance type (e.g., `t2.micro`).
+
+  /aws/metadata/amiId:
+    get:
+      operationId: getAmiId
+      summary: Retrieves the AMI ID, which can indicate the OS type.
+      description: Accesses the `/ami-id` endpoint in the AWS metadata service. Use the retrieved AMI ID to look up the OS type.
+      responses:
+        '200':
+          description: Successfully retrieved AMI ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  amiId:
+                    type: string
+                    description: AMI ID, which can be used to identify the OS.
+
+  /aws/metadata/flag:
+    get:
+      operationId: getFlag
+      summary: Searches for a hidden flag in AWS metadata endpoints.
+      description: Accesses metadata paths, including network interfaces, to search for hidden flags.
+      responses:
+        '200':
+          description: Retrieved hidden flag from metadata service.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  flag:
+                    type: string
+                    description: Retrieved flag value.
+        '404':
+          description: Flag not found.
+
+  /serviceDiscovery/nmap:
+    post:
+      operationId: conductNmapScan
+      summary: Conducts a stealthy Nmap scan to detect open ports with minimal detection risk.
+      description: This endpoint initiates an Nmap scan with optional flags to minimize detection, such as ping-only and SYN scan modes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hostname:
+                  type: string
+                  description: Target hostname or IP for scanning.
+                port:
+                  type: integer
+                  description: Specific port to scan (e.g., `8090`).
+                scanType:
+                  type: string
+                  enum: [ping, SYN, stealth]
+                  description: Type of scan to use (e.g., ping, SYN, or stealth).
+      responses:
+        '200':
+          description: Successfully conducted Nmap scan.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scanResults:
+                    type: string
+                    description: Results of the Nmap scan.
+        '400':
+          description: Invalid scan parameters or network restriction
+
+  /serviceDiscovery/nc:
+    post:
+      operationId: useNetcat
+      summary: Uses Netcat (nc) to interact with a specified host and port.
+      description: Connects to a remote host using `nc` (Netcat), which is useful for probing services and interacting with custom service prompts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hostname:
+                  type: string
+                  description: Target hostname or IP.
+                port:
+                  type: integer
+                  description: Port to connect to (e.g., `8090`).
+      responses:
+        '200':
+          description: Successfully connected using Netcat and retrieved initial response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+                    description: Initial response or command prompt from the service.
+        '400':
+          description: Connection failed or invalid parameters
+
+  /remoteServer/command:
+    post:
+      operationId: executeCommand
+      summary: Executes commands on a remote server with a command-based interface.
+      description: Runs commands on a connected remote server via Netcat, useful for interaction with command-line servers.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command:
+                  type: string
+                  enum: [version, list, get, help]
+                  description: Command to execute on the remote server.
+                fileName:
+                  type: string
+                  description: Name of file to retrieve if using `get` command.
+      responses:
+        '200':
+          description: Command executed successfully and output returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  output:
+                    type: string
+                    description: Command output or requested file content.
+        '404':
+          description: File not found for `get` command
+
+  /walkthrough/metadataAccess:
+    get:
+      operationId: metadataAccessWalkthrough
+      summary: Walkthrough for accessing AWS EC2 metadata endpoints.
+      description: Step-by-step guidance on querying AWS metadata for availability zone, instance type, IAM role, and more.
+      responses:
+        '200':
+          description: Retrieved AWS metadata access walkthrough.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  steps:
+                    type: array
+                    items:
+                      type: string
+                    description: Step-by-step instructions for AWS metadata retrieval.
+        '404':
+          description: Walkthrough not available
+
+  /walkthrough/portAnomalyAnalysis:
+    get:
+      operationId: portAnomalyAnalysisWalkthrough
+      summary: Walkthrough for analyzing anomalous port behavior.
+      description: Guides users on detecting unusual port behaviors, such as ports that appear open or closed depending on the scan type.
+      responses:
+        '200':
+          description: Walkthrough instructions for anomaly analysis.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  steps:
+                    type: array
+                    items:
+                      type: string
+                    description: Step-by-step instructions for port anomaly detection.
+        '404':
+          description: Walkthrough not available
+
+#Key Endpoints and Their Functions
+# AWS Metadata Retrieval:
+
+/aws/metadata/availabilityZone: Retrieves the availability zone of the instance.
+/aws/metadata/securityCredentials: Retrieves IAM role name.
+/aws/metadata/instanceType: Retrieves the instance type.
+/aws/metadata/amiId: Retrieves AMI ID for OS identification.
+/aws/metadata/flag: Searches for a hidden flag, especially within network interfaces.
+Service Discovery and Anomaly Detection:
+
+/serviceDiscovery/nmap: Runs an Nmap scan with stealth options to minimize detection by SOC.
+/serviceDiscovery/nc: Uses Netcat to connect to a target and interact with custom service prompts.
+Remote Command Execution:
+
+/remoteServer/command: Executes commands on a remote server connected via Netcat. Supports commands like version, list, and get for file retrieval.
+
+# Walkthrough Guides:
+
+/walkthrough/metadataAccess: Provides a detailed walkthrough for querying AWS metadata endpoints, guiding the user through each relevant endpoint for questions.
+/walkthrough/portAnomalyAnalysis: Offers guidance on identifying unusual port behavior, such as open vs. closed states based on scan flags.
+
+# These endpoints cover a range of reconnaissance, stealth scanning, remote command execution, and guided exploration of AWS instance metadata. The walkthroughs help in understanding and interacting with unusual network behaviors, providing structured support for scenarios often encountered in penetration testing or cloud-based reconnaissance.

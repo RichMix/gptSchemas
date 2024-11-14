@@ -1,0 +1,355 @@
+
+# For this updated focus on scanning and analysis, I’ll set up an OpenAPI schema for an API that helps with:
+  
+  # IP address and port scanning to identify active services.
+  # Protocol detection for identifying the types of communication on open ports.
+  # Best practices in log analysis to help identify malicious patterns and log aggregation parameters.
+  # forensics -- for Scan for IP addresses, ports, protocols and
+# Base conversion and encryption key support to assist in interpreting log data or other encoded information.
+# The API will offer endpoints that align with best practices for cybersecurity, such as handling data securely, adhering to privacy standards, and focusing on anomaly detection rather than automated attack replication.
+
+# yaml
+openapi: 3.1.0
+info:
+  title: Network and Log Analysis API
+  version: 1.2.0
+servers:
+  - url: https://api.cyberlogtools.com
+
+paths:
+  /parseSSHLog:
+    post:
+      operationId: parseSSHLog
+      summary: Parses SSH logs to identify connection attempts, failures, and suspicious activity.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                logData:
+                  type: string
+                  description: Raw SSH log data.
+      responses:
+        '200':
+          description: Parsed SSH log with insights.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  parsedEvents:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: Event timestamp.
+                        event:
+                          type: string
+                          description: Type of SSH event (e.g., login attempt, failure).
+                        sourceIP:
+                          type: string
+                          description: Source IP address if available.
+                        status:
+                          type: string
+                          description: Event status (e.g., success, failure).
+        '400':
+          description: Invalid SSH log format
+
+  /parseNGINXLog:
+    post:
+      operationId: parseNGINXLog
+      summary: Parses NGINX access logs to analyze HTTP requests, status codes, and potential issues.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                logData:
+                  type: string
+                  description: Raw NGINX access log data.
+      responses:
+        '200':
+          description: Parsed NGINX log data with request insights.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requests:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ip:
+                          type: string
+                          description: Requesting IP address.
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: Request timestamp.
+                        method:
+                          type: string
+                          description: HTTP method (e.g., GET, POST).
+                        endpoint:
+                          type: string
+                          description: Accessed endpoint.
+                        statusCode:
+                          type: integer
+                          description: HTTP status code.
+        '400':
+          description: Invalid NGINX log format
+
+  /parseHistoryLog:
+    post:
+      operationId: parseHistoryLog
+      summary: Parses command history logs (e.g., bash history) for command usage analysis.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                logData:
+                  type: string
+                  description: Raw history log data (e.g., bash history).
+      responses:
+        '200':
+          description: Parsed command history with usage insights.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  commands:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: Command execution timestamp.
+                        command:
+                          type: string
+                          description: Command executed.
+        '400':
+          description: Invalid history log format
+
+  /parseSquidLog:
+    post:
+      operationId: parseSquidLog
+      summary: Parses Squid proxy logs to analyze requests, access control, and usage patterns.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                logData:
+                  type: string
+                  description: Raw Squid proxy log data.
+      responses:
+        '200':
+          description: Parsed Squid log with request insights.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requests:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: Request timestamp.
+                        sourceIP:
+                          type: string
+                          description: IP address of the requestor.
+                        destinationURL:
+                          type: string
+                          description: URL accessed.
+                        status:
+                          type: string
+                          description: Status code (e.g., TCP_HIT, TCP_MISS).
+        '400':
+          description: Invalid Squid log format
+
+  /parsePaymentLog:
+    post:
+      operationId: parsePaymentLog
+      summary: Parses payment processing logs to identify transactions, errors, and status updates.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                logData:
+                  type: string
+                  description: Raw payment log data.
+      responses:
+        '200':
+          description: Parsed payment log with transaction details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        transactionID:
+                          type: string
+                          description: Unique transaction identifier.
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: Transaction timestamp.
+                        amount:
+                          type: number
+                          format: float
+                          description: Transaction amount.
+                        status:
+                          type: string
+                          description: Transaction status (e.g., completed, failed).
+        '400':
+          description: Invalid payment log format
+
+  /parseVSFTPDLog:
+    post:
+      operationId: parseVSFTPDLog
+      summary: Parses VSFTPD logs to track file transfers, connections, and authentication events.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                logData:
+                  type: string
+                  description: Raw VSFTPD log data.
+      responses:
+        '200':
+          description: Parsed VSFTPD log with file transfer insights.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transfers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: Transfer timestamp.
+                        filePath:
+                          type: string
+                          description: Path of the file transferred.
+                        transferType:
+                          type: string
+                          description: Transfer type (e.g., upload, download).
+                        status:
+                          type: string
+                          description: Status of the transfer.
+        '400':
+          description: Invalid VSFTPD log format
+
+  /parseLoginLog:
+    post:
+      operationId: parseLoginLog
+      summary: Parses login logs to identify login attempts, successes, and failures.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                logData:
+                  type: string
+                  description: Raw login log data.
+      responses:
+        '200':
+          description: Parsed login log with login attempt insights.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  loginAttempts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: Login attempt timestamp.
+                        username:
+                          type: string
+                          description: Username used in the attempt.
+                        status:
+                          type: string
+                          description: Result of the login attempt (e.g., success, failure).
+        '400':
+          description: Invalid login log format
+
+  /parseCustomLog:
+    post:
+      operationId: parseCustomLog
+      summary: Parses custom log file formats by matching configurable patterns.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                logData:
+                  type: string
+                  description: Raw custom log data.
+                pattern:
+                  type: string
+                  description: Custom pattern (e.g., regex) to match log events.
+      responses:
+        '200':
+          description: Parsed custom log with matching patterns.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  parsedEntries:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        timestamp:
+                          type: string
+                          format: date-time
+                          description: Event timestamp.
+                        event:
+                          type: string
+                          description: Parsed event description.
+        '400':
+          description: Invalid custom log format or pattern
+# This update sets the new base URL to https://api.cyberlogtools.com, allowing you to avoid the duplicate domain conflict. Let me know if there’s anything else you need!

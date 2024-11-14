@@ -1,0 +1,263 @@
+# Includes: Metadata detection, Forensics, File Carving, Magic Bytes This challenge involves correcting the magic bytes / file signature of an image.
+# OpenAPI schema with endpoints for Metadata Detection, Forensics Analysis, File Carving, and Magic Byte Correction. Each endpoint will support tasks such as identifying file metadata, detecting file format issues, correcting magic bytes, and analyzing PDF metadata for forensics.
+
+# yaml
+openapi: 3.1.0
+info:
+  title: Forensics and Metadata Analysis API
+  version: 1.0.2
+servers:
+  - url: https://api.forensicsanalysis.com
+
+paths:
+  /metadata/view:
+    post:
+      operationId: viewMetadata
+      summary: Retrieves metadata from a file, such as PDF creator tool, version, and watermarking software.
+      description: Extracts metadata fields from a file, focusing on fields like `creator_tool`, `pdf_version`, and watermarking tool for PDF files.
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Binary file data.
+      responses:
+        '200':
+          description: Retrieved metadata from file.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metadata:
+                    type: object
+                    properties:
+                      creatorTool:
+                        type: string
+                        description: Tool used to create the file (e.g., Adobe Acrobat).
+                      pdfVersion:
+                        type: string
+                        description: PDF version, if applicable.
+                      watermarkTool:
+                        type: string
+                        description: Software used to insert watermark, if applicable.
+        '400':
+          description: Invalid file format or unsupported file type
+
+  /forensics/magicBytesCheck:
+    post:
+      operationId: checkMagicBytes
+      summary: Verifies and corrects the magic bytes of a file based on its file extension.
+      description: Detects and repairs incorrect magic bytes in a file header based on its expected file signature.
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Binary file data.
+      responses:
+        '200':
+          description: Magic bytes verified and corrected if needed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  corrected:
+                    type: boolean
+                    description: Indicates if the magic bytes were corrected.
+                  originalBytes:
+                    type: string
+                    description: Original magic bytes in hexadecimal.
+                  correctedBytes:
+                    type: string
+                    description: Corrected magic bytes, if applicable.
+        '400':
+          description: Invalid file format or unsupported file type
+
+  /forensics/fileCarving:
+    post:
+      operationId: carveFile
+      summary: Extracts embedded files or fragments within a larger file or memory dump.
+      description: Carves files from a binary blob, identifying and extracting embedded files by detecting known signatures or structures.
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Binary data containing potential embedded files.
+      responses:
+        '200':
+          description: Successfully carved and extracted files.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  extractedFiles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fileName:
+                          type: string
+                          description: Name of the carved file.
+                        fileType:
+                          type: string
+                          description: Type of extracted file (e.g., `JPEG`, `PDF`).
+                        fileData:
+                          type: string
+                          format: byte
+                          description: Base64 encoded data of the extracted file.
+        '400':
+          description: No identifiable files found or invalid input data
+
+  /forensics/pdfRedactionCheck:
+    post:
+      operationId: checkPdfRedaction
+      summary: Analyzes a PDF for redaction or hidden content behind overlays.
+      description: Scans a PDF for visible overlays or black boxes that may conceal text or flags. Attempts to uncover hidden text if possible.
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Binary data of a PDF file.
+      responses:
+        '200':
+          description: Analyzed PDF and retrieved any hidden or redacted text.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  redactionStatus:
+                    type: boolean
+                    description: Indicates if redaction elements were detected.
+                  uncoveredText:
+                    type: string
+                    description: Text found behind redactions or overlays.
+        '400':
+          description: Invalid PDF format or unsupported redaction elements
+
+  /metadata/imageMagicBytes:
+    post:
+      operationId: fixImageMagicBytes
+      summary: Checks and corrects the magic bytes of image files like JPEGs.
+      description: Detects issues with magic bytes in an image file based on its type, such as JPEG, and attempts to repair the header.
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Binary data of an image file.
+      responses:
+        '200':
+          description: Verified and corrected image magic bytes if needed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  originalBytes:
+                    type: string
+                    description: Original magic bytes in hexadecimal.
+                  correctedBytes:
+                    type: string
+                    description: Corrected magic bytes, if applicable.
+                  valid:
+                    type: boolean
+                    description: Indicates if the file passed the magic byte check.
+        '400':
+          description: Unsupported file type or invalid file format
+
+  /forensics/pdfMetadataAnalysis:
+    post:
+      operationId: analyzePdfMetadata
+      summary: Analyzes metadata of a PDF for creator tool, version, and watermarking software.
+      description: Parses PDF metadata to reveal the `creator_tool`, `pdf_version`, and any software used for watermarking or redaction.
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Binary PDF file data.
+      responses:
+        '200':
+          description: Successfully extracted metadata from the PDF.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metadata:
+                    type: object
+                    properties:
+                      creatorTool:
+                        type: string
+                        description: Software used to create the PDF.
+                      pdfVersion:
+                        type: string
+                        description: PDF version.
+                      watermarkingSoftware:
+                        type: string
+                        description: Software used to apply watermarking or redaction, if detected.
+        '400':
+          description: Invalid PDF file format or unsupported metadata fields
+
+  /forensics/flagRecovery:
+    post:
+      operationId: recoverFlagFromPdf
+      summary: Attempts to reveal hidden flags or content behind overlays in PDF files.
+      description: Scans a PDF for obscured flags or data behind redacted areas, extracting text hidden under overlays.
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Binary PDF file data.
+      responses:
+        '200':
+          description: Successfully uncovered hidden flag or content in PDF.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  flag:
+                    type: string
+                    description: Retrieved flag or hidden content from PDF.
+        '404':
+          description: Flag or hidden content not found
+New Endpoints Summary
+Metadata and File Analysis:
+
+/metadata/view: Extracts general metadata from files, including creator_tool, pdf_version, and watermark software (especially for PDFs).
+/forensics/pdfMetadataAnalysis: Dedicated endpoint for PDF metadata analysis, including watermarking and creator tool fields.
+Magic Bytes Correction:
+
+/forensics/magicBytesCheck: Validates and corrects magic bytes in any file based on expected headers.
+/metadata/imageMagicBytes: Checks and corrects magic bytes specifically for image files (like JPEGs), helping to address header inconsistencies.
+Forensics and File Carving:
+
+/forensics/fileCarving: Carves embedded files out of larger data files or memory dumps, identifying based on magic byte signatures.
+/forensics/flagRecovery: Recovers hidden flags in PDF files by scanning for overlays and retrieving underlying text.
+Redaction and Hidden Content in PDFs:
+
+/forensics/pdfRedactionCheck: Analyzes PDF files for visible overlays or black boxes that may hide text and retrieves any hidden data if possible.
+
+# Each endpoint here is structured to support key forensics actions such as metadata analysis, magic byte correction, file carving, and handling redacted content in PDFs, making it a valuable toolset for file investigation and forensic analysis in a cybersecurity context. Let me know if further customization is needed!
