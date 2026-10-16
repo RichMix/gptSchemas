@@ -4,14 +4,13 @@ This repository includes YAML schemas used to define the configuration and behav
 
 # 1. Table Of Contents 
 
-# - Table of Contents
-# - Introduction
-# - Schema Structure
-# - Key Components
-# - Schema Example
-# - Usage
-# - Best Practices
-
+#### - Table of Contents
+#### - Introduction
+#### - Schema Structure
+#### - Key Components
+#### - Schema Example
+#### - Usage
+#### - Best Practices
 
 # 2. Introduction
 The YAML schemas in this repository define configurable options for CTF bots used in various challenges. By using YAML, the schema provides an easy-to-read and modify configuration file that can specify bot behavior, challenge parameters, authentication, and other key details necessary for effective interaction in CTF environments.
